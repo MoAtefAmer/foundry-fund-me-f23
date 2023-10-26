@@ -1,33 +1,40 @@
 include .env
 export 
 
-run:
-	 anvil
+run:;anvil
 
-.PHONY: tests 
-tests:
-		forge test -vv
-
-.PHONY: deploy
-deploy:
-		forge script ${dir}
-
-.PHONY: test
-
-test:
-		forge test --match-contract ${c} --match-test ${t} -vvv
+# .PHONY: tests 
+tests:;forge test -vv
 
 
-.PHONY: tests-sepolia
-tests-sepolia:
-	forge test --fork-url $$SEPOLIA_RPC_URL
+# Show storage of contract
+cast-storage:;cast storage ${c}
 
-.PHONY: test-sepolia
+# Deploy on chain
+deploy-rpc:;forge script ${dir} --rpc-url ${ch}	--private-key ${pk} --broadcast 
+# --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvv
 
-test-sepolia:
-	forge test --match-test ${t} -vv --fork-url $$SEPOLIA_RPC_URL 
+deploy:;forge script ${dir}
+
+
+test:;forge test  --match-test ${t} -vvv
+
+
+
+tests-sepolia:;	forge test --fork-url $$SEPOLIA_RPC_URL
+
+
+
+test-sepolia:;forge test --match-test ${t} -vv --fork-url $$SEPOLIA_RPC_URL 
 	 
 
-.PHONY: test-coverage
-test-coverage:
-	forge coverage --fork-url $$SEPOLIA_RPC_URL
+
+coverage:;forge coverage --fork-url $$SEPOLIA_RPC_URL
+
+snapshot:;forge snapshot # gas snapshot; how much gas will this test cost 
+
+
+storage-layout:;forge inspect ${c} storageLayout
+
+
+foundry-devops:;forge install ChainAccelOrg/foundry-devops --no-commit

@@ -6,11 +6,17 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.18;
+
 import {Script} from "forge-std/Script.sol";
+import {MockV3Aggregator} from "../test/mocks/MockV3Aggregator.sol";
+
 // import "forge-std/console.sol";
 
-contract HelperConfig {
+contract HelperConfig is Script {
     NetworkConfig public activeNetworkConfig;
+
+    uint8 public constant DECIMALS = 8;
+    int256 public constant INITIAL_PRICE = 2000e8;
 
     struct NetworkConfig {
         address priceFeed; // ETH/USD price feed address
@@ -20,7 +26,7 @@ contract HelperConfig {
         if (block.chainid == 11155111) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
-            activeNetworkConfig = getAnvilEthConfig();
+            activeNetworkConfig = getOrCreateAnvilEthConfig();
         }
     }
 
@@ -32,5 +38,21 @@ contract HelperConfig {
         return sepoliaConfig;
     }
 
-    function getAnvilEthConfig() public pure returns (NetworkConfig memory) {}
+    function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
+        if (activeNetworkConfig.priceFeed != address(0)) {
+            // if we already have a price feed contract deployed, return it
+            return activeNetworkConfig;
+        }
+
+        vm.startBroadcast();
+        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
+            DECIMALS,
+            INITIAL_PRICE
+        );
+        vm.stopBroadcast();
+        NetworkConfig memory anvilConfig = NetworkConfig({
+            priceFeed: address(mockPriceFeed)
+        });
+        return anvilConfig;
+    }
 }
